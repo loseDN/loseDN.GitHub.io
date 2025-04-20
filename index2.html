@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>小动物的方向游戏</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background: linear-gradient(180deg, #ffb6c1, #fffacd);
+      font-family: 'Comic Sans MS', Arial, sans-serif;
+      overflow: hidden;
+      user-select: none;
+    }
+    #game-container {
+      position: relative;
+      width: 500px;
+      height: 600px;
+      background: #e6e6fa;
+      border: 4px solid #ff69b4;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+      z-index: 1;
+    }
+    .animal {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      z-index: 5;
+      object-fit: contain;
+    }
+    #mouse { left: 200px; top: 200px; filter: grayscale(100%) brightness(1.2); } /* (2,2) */
+    #bunny { left: 200px; top: 100px; filter: hue-rotate(0deg) brightness(1.1); } /* (2,1) */
+    #bear { left: 200px; top: 300px; filter: hue-rotate(30deg) saturate(1.5); } /* (2,3) */
+    #cat { left: 100px; top: 200px; filter: hue-rotate(15deg) brightness(1.3); } /* (1,2) */
+    #dog { left: 300px; top: 200px; filter: brightness(1.5); } /* (3,2) */
+    #question {
+      position: absolute;
+      top: 50px;
+      width: 100%;
+      font-size: 24px;
+      color: #4682b4;
+      text-align: center;
+      font-weight: bold;
+      text-shadow: 2px 2px 4px #fff;
+    }
+    #score {
+      position: absolute;
+      top: 10px;
+      width: 100%;
+      font-size: 28px;
+      color: #4682b4;
+      text-align: center;
+      font-weight: bold;
+      text-shadow: 2px 2px 4px #fff;
+    }
+    #button-container {
+      position: absolute;
+      bottom: 20px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+    .direction-button {
+      width: 80px;
+      height: 80px;
+      font-size: 24px;
+      font-weight: bold;
+      color: #fff;
+      background: #ff1493;
+      border: 3px solid #fff;
+      border-radius: 15px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-shadow: 1px 1px 2px #000;
+      transition: transform 0.2s;
+    }
+    .direction-button:hover {
+      transform: scale(1.1);
+    }
+    .direction-button:active {
+      transform: scale(0.95);
+    }
+    #sparkle-canvas {
+      position: absolute;
+      pointer-events: none;
+      z-index: 10;
+    }
+    #fireworks-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: -1;
+    }
+    @keyframes sparkle {
+      0% { opacity: 1; transform: scale(0.5); }
+      100% { opacity: 0; transform: scale(1.5); }
+    }
+    /* CSS Fallback (uncomment if image fails) */
+    /*
+    .animal-face {
+      position: relative;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      margin: 10px;
+    }
+    .animal-ear {
+      position: absolute;
+      border-radius: 50%;
+      top: -15px;
+      border: 3px solid #ff69b4;
+    }
+    .animal-ear.left { left: 10px; }
+    .animal-ear.right { right: 10px; }
+    .animal-eye {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      background: #000;
+      border-radius: 50%;
+      top: 25px;
+    }
+    .animal-eye.left { left: 20px; }
+    .animal-eye.right { right: 20px; }
+    .animal-nose {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: #ff69b4;
+      border-radius: 50%;
+      top: 50px;
+      left: 35px;
+    }
+    .animal-cheek {
+      position: absolute;
+      width: 15px;
+      height: 15px;
+      background: #ff9999;
+      border-radius: 50%;
+      top: 35px;
+    }
+    .animal-cheek.left { left: 10px; }
+    .animal-cheek.right { right: 10px; }
+    #mouse .animal-face { background: #d3d3d3; }
+    #mouse .animal-ear { width: 20px; height: 20px; }
+    #bunny .animal-face { background: #ffd700; }
+    #bunny .animal-ear { width: 15px; height: 35px; border-radius: 10px; }
+    #bear .animal-face { background: #8b4513; }
+    #bear .animal-ear { width: 18px; height: 18px; }
+    #cat .animal-face { background: #ffa500; }
+    #cat .animal-ear { width: 15px; height: 25px; border-radius: 10px 10px 0 0; }
+    #dog .animal-face { background: #ffffff; }
+    #dog .animal-ear { width: 20px; height: 15px; border-radius: 0 0 10px 10px; }
+    */
+  </style>
+</head>
+<body>
+  <canvas id="fireworks-canvas"></canvas>
+  <div id="game-container">
+    <img id="mouse" class="animal" src="ai-generated-8675105_1280.png" alt="Cartoon Mouse">
+    <img id="bunny" class="animal" src="bunny-155674_1280.png" alt="Cartoon Bunny">
+    <img id="bear" class="animal" src="teddy-bear-3599680_1280.jpg" alt="Cartoon Bear">
+    <img id="cat" class="animal" src="cats-8096304_1280.jpg" alt="Cartoon Cat">
+    <img id="dog" class="animal" src="dog-8262506_1280.jpg" alt="Cartoon Dog">
+    <div id="score">星星: 0</div>
+    <div id="question"></div>
+    <div id="button-container">
+      <div class="direction-button" data-direction="up">上</div>
+      <div class="direction-button" data-direction="down">下</div>
+      <div class="direction-button" data-direction="left">左</div>
+      <div class="direction-button" data-direction="right">右</div>
+    </div>
+    <canvas id="sparkle-canvas" width="500" height="600"></canvas>
+  </div>
+  <script>
+    const scoreDisplay = document.getElementById('score');
+    const questionDisplay = document.getElementById('question');
+    const sparkleCanvas = document.getElementById('sparkle-canvas');
+    const sparkleCtx = sparkleCanvas.getContext('2d');
+    const fireworksCanvas = document.getElementById('fireworks-canvas');
+    const fireworksCtx = fireworksCanvas.getContext('2d');
+    const buttons = document.querySelectorAll('.direction-button');
+
+    let score = 0;
+    let sparkles = [];
+    let fireworks = [];
+    const gridSize = 100;
+    const offsetX = 50;
+    const offsetY = 50;
+
+    const animals = [
+      { id: 'bunny', name: '小兔子', x: 2, y: 1, direction: 'up' },
+      { id: 'bear', name: '小熊', x: 2, y: 3, direction: 'down' },
+      { id: 'cat', name: '小猫咪', x: 1, y: 2, direction: 'left' },
+      { id: 'dog', name: '小狗', x: 3, y: 2, direction: 'right' }
+    ];
+
+    let currentAnimal = animals[Math.floor(Math.random() * animals.length)];
+
+    // Resize fireworks canvas to match window size
+    function resizeFireworksCanvas() {
+      fireworksCanvas.width = window.innerWidth;
+      fireworksCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeFireworksCanvas);
+    resizeFireworksCanvas();
+
+    function updateQuestion() {
+      questionDisplay.textContent = `${currentAnimal.name}在小老鼠的哪一边？`;
+    }
+
+    function drawSparkles() {
+      sparkleCtx.clearRect(0, 0, sparkleCanvas.width, sparkleCanvas.height);
+      sparkles = sparkles.filter(s => s.alpha > 0);
+      sparkles.forEach(s => {
+        sparkleCtx.beginPath();
+        sparkleCtx.arc(s.x, s.y, s.size, 0, 2 * Math.PI);
+        sparkleCtx.fillStyle = `rgba(255, 255, 0, ${s.alpha})`;
+        sparkleCtx.fill();
+        s.y -= 1;
+        s.alpha -= 0.02;
+        s.size += 0.1;
+      });
+    }
+
+    function createFirework(x, y) {
+      const colors = ['#ff0000', '#0000ff', '#00ff00', '#ffff00', '#800080', '#ffa500'];
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      const particles = [];
+      for (let i = 0; i < 50; i++) {
+        const angle = Math.random() * 2 * Math.PI;
+        const speed = Math.random() * 6 + 2;
+        particles.push({
+          x,
+          y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          size: Math.random() * 4 + 2,
+          alpha: 1,
+          color
+        });
+      }
+      return particles;
+    }
+
+    function drawFireworks() {
+      fireworksCtx.clearRect(0, 0, fireworksCanvas.width, fireworksCanvas.height);
+      fireworks = fireworks.filter(f => f.alpha > 0);
+      fireworks.forEach(f => {
+        fireworksCtx.beginPath();
+        fireworksCtx.arc(f.x, f.y, f.size, 0, 2 * Math.PI);
+        fireworksCtx.fillStyle = `rgba(${parseInt(f.color.slice(1,3),16)},${parseInt(f.color.slice(3,5),16)},${parseInt(f.color.slice(5,7),16)},${f.alpha})`;
+        fireworksCtx.fill();
+        f.x += f.vx;
+        f.y += f.vy;
+        f.vy += 0.05; // Reduced gravity
+        f.alpha -= 0.006; // Slower fade for ~6s
+        f.size *= 0.98; // Shrink particles
+      });
+      requestAnimationFrame(animate);
+    }
+
+    function animate() {
+      drawSparkles();
+      drawFireworks();
+    }
+
+    buttons.forEach(button => {
+      button.addEventListener('click', () => {
+        const direction = button.dataset.direction;
+        if (direction === currentAnimal.direction) {
+          score++;
+          scoreDisplay.textContent = `星星: ${score}`;
+          // Spawn sparkles around the animal
+          for (let i = 0; i < 10; i++) {
+            sparkles.push({
+              x: currentAnimal.x * gridSize + offsetX + 50 + Math.random() * 20 - 10,
+              y: currentAnimal.y * gridSize + offsetY + 50 + Math.random() * 20 - 10,
+              size: Math.random() * 5 + 2,
+              alpha: 1
+            });
+          }
+          // Spawn fireworks across the full screen
+          const width = window.innerWidth;
+          const height = window.innerHeight;
+          const positions = [
+            [width * 0.25, height * 0.25], // Top-left
+            [width * 0.75, height * 0.25], // Top-right
+            [width * 0.25, height * 0.75], // Bottom-left
+            [width * 0.75, height * 0.75], // Bottom-right
+            [width * 0.5, height * 0.5], // Center
+            [width * Math.random(), height * Math.random()], // Random 1
+            [width * Math.random(), height * Math.random()], // Random 2
+            [width * Math.random(), height * Math.random()] // Random 3
+          ];
+          positions.forEach(([x, y]) => {
+            fireworks.push(...createFirework(x, y));
+          });
+          currentAnimal = animals[Math.floor(Math.random() * animals.length)];
+          updateQuestion();
+        }
+      });
+    });
+
+    updateQuestion();
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>
