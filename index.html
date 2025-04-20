@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>小兔子的冒险之旅</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background: linear-gradient(180deg, #ffb6c1, #fffacd); /* Pink to light yellow */
+      font-family: 'Comic Sans MS', Arial, sans-serif;
+      overflow: hidden;
+      user-select: none;
+    }
+    #game-container {
+      position: relative;
+      width: 500px;
+      height: 600px;
+      background: #e6e6fa; /* Lavender, kid-friendly */
+      border: 4px solid #ff69b4;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+    }
+    #bunny {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      left: 220px;
+      top: 220px;
+      transition: all 0.3s ease;
+      animation: idle-bounce 1.5s infinite;
+    }
+    .bunny-face {
+      position: relative;
+      width: 50px;
+      height: 50px;
+      background: #ffd700; /* Yellow face */
+      border-radius: 50%;
+      margin: 5px;
+    }
+    .bunny-ear {
+      position: absolute;
+      width: 15px;
+      height: 30px;
+      background: #ffd700;
+      border-radius: 10px;
+      top: -20px;
+      border: 2px solid #ff69b4;
+    }
+    .bunny-ear.left { left: 5px; transform: rotate(-20deg); }
+    .bunny-ear.right { right: 5px; transform: rotate(20deg); }
+    .bunny-eye {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: #000;
+      border-radius: 50%;
+      top: 15px;
+    }
+    .bunny-eye.left { left: 12px; }
+    .bunny-eye.right { right: 12px; }
+    .bunny-nose {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: #ff69b4;
+      border-radius: 50%;
+      top: 30px;
+      left: 22px;
+    }
+    .bunny-cheek {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: #ff9999;
+      border-radius: 50%;
+      top: 25px;
+    }
+    .bunny-cheek.left { left: 5px; }
+    .bunny-cheek.right { right: 5px; }
+    #score {
+      position: absolute;
+      top: 10px;
+      width: 100%;
+      font-size: 28px;
+      color: #4682b4;
+      text-align: center;
+      font-weight: bold;
+      text-shadow: 2px 2px 4px #fff;
+    }
+    #button-container {
+      position: absolute;
+      bottom: 20px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+    .direction-button {
+      width: 80px;
+      height: 80px;
+      font-size: 24px;
+      font-weight: bold;
+      color: #fff;
+      background: #ff1493;
+      border: 3px solid #fff;
+      border-radius: 15px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-shadow: 1px 1px 2px #000;
+      transition: transform 0.2s;
+    }
+    .direction-button:hover {
+      transform: scale(1.1);
+    }
+    .direction-button:active {
+      transform: scale(0.95);
+    }
+    canvas {
+      position: absolute;
+      pointer-events: none;
+      z-index: 10; /* Ensure sparkles appear above bunny */
+    }
+    @keyframes idle-bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+    @keyframes sparkle {
+      0% { opacity: 1; transform: scale(0.5); }
+      100% { opacity: 0; transform: scale(1.5); }
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <div id="bunny">
+      <div class="bunny-face">
+        <div class="bunny-ear left"></div>
+        <div class="bunny-ear right"></div>
+        <div class="bunny-eye left"></div>
+        <div class="bunny-eye right"></div>
+        <div class="bunny-nose"></div>
+        <div class="bunny-cheek left"></div>
+        <div class="bunny-cheek right"></div>
+      </div>
+    </div>
+    <!-- Optional: Uncomment for base64 image fallback -->
+    <!-- <img id="bunny" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAKKADAAQAAAABAAAAKAAAAADiO6pXAAABZUlEQVRYCe2WSwoCMRBFX4VfIUfwEfxa/Qr/gm/gp7AruIIrOBLcS25JkmVJNoRJI8mSJAkaj8fj8XgcxzHLshxnGIbP53O/38dxvM/nw8PhcHRaLBaLxWKxWq1arVYul0s+n88QBAE3bdvneZ7n+/0ej8e73W6z2Wy322g0Wq3WMAy73W6z2Wy322g0Wq3WMAy73W6z2Wy322g0Wq3WMAy73W6z2Wy322g0Wq3WMAzDbrdbrVartVqtdr9fr9Xq9Xq/X6/V6vd7v9/v9fr/f7/d7vV6v1+v1er1er9fr9Xq9Xq/X6/X6/X6/3+/3+73e7/c6rVaL5fP5fP7f8AYuL8M4k1UoAAAAAElFTkSuQmCC" alt="Open-Source Cartoon Bunny"> -->
+    <div id="score">星星: 0</div>
+    <div id="button-container">
+      <div class="direction-button" data-direction="up">上</div>
+      <div class="direction-button" data-direction="down">下</div>
+      <div class="direction-button" data-direction="left">左</div>
+      <div class="direction-button" data-direction="right">右</div>
+    </div>
+    <canvas id="sparkle-canvas" width="500" height="600"></canvas>
+  </div>
+  <script>
+    const bunny = document.getElementById('bunny');
+    const scoreDisplay = document.getElementById('score');
+    const canvas = document.getElementById('sparkle-canvas');
+    const ctx = canvas.getContext('2d');
+    const buttons = document.querySelectorAll('.direction-button');
+
+    let bunnyX = 2; // Grid position (0 to 4)
+    let bunnyY = 2;
+    let score = 0;
+    let sparkles = [];
+    const gridSize = 100; // Each grid cell is 100px
+    const offsetX = 50; // Center bunny in grid cell
+    const offsetY = 50;
+
+    function updateBunnyPosition() {
+      bunny.style.left = `${bunnyX * gridSize + offsetX}px`;
+      bunny.style.top = `${bunnyY * gridSize + offsetY}px`;
+    }
+
+    function drawSparkles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      sparkles = sparkles.filter(s => s.alpha > 0);
+      sparkles.forEach(s => {
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size, 0, 2 * Math.PI);
+        ctx.fillStyle = `rgba(255, 255, 0, ${s.alpha})`;
+        ctx.fill();
+        s.y -= 1;
+        s.alpha -= 0.02;
+        s.size += 0.1;
+      });
+      requestAnimationFrame(drawSparkles);
+    }
+
+    buttons.forEach(button => {
+      button.addEventListener('click', () => {
+        const direction = button.dataset.direction;
+        let newX = bunnyX;
+        let newY = bunnyY;
+
+        if (direction === 'up' && bunnyY > 0) newY--;
+        if (direction === 'down' && bunnyY < 4) newY++;
+        if (direction === 'left' && bunnyX > 0) newX--;
+        if (direction === 'right' && bunnyX < 4) newX++;
+
+        if (newX !== bunnyX || newY !== bunnyY) {
+          bunnyX = newX;
+          bunnyY = newY;
+          updateBunnyPosition();
+          score++;
+          scoreDisplay.textContent = `星星: ${score}`;
+          // Add sparkles
+          for (let i = 0; i < 10; i++) {
+            sparkles.push({
+              x: bunnyX * gridSize + offsetX + 30 + Math.random() * 20 - 10,
+              y: bunnyY * gridSize + offsetY + 30 + Math.random() * 20 - 10,
+              size: Math.random() * 5 + 2,
+              alpha: 1
+            });
+          }
+        }
+      });
+    });
+
+    updateBunnyPosition();
+    requestAnimationFrame(drawSparkles);
+  </script>
+</body>
+</html>
